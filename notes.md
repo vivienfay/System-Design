@@ -1,17 +1,18 @@
-#### Table of Content 
+#### Table of Content
 
 # 0. 如何设计系统 How to design the System
 
 ### 1. 4S Analysis
+
 - Scenario 场景
   - ask/features/qps/dau/interfaces
   - 需要设计哪些功能
     - step1: enumerate 罗列所有app的功能
       - register/login
       - user profile display / edit
-      - upload image / video * 
-      - search * 
-      - post / share a tweet 
+      - upload image / video *
+      - search *
+      - post / share a tweet
       - timeline / news feed
       - follow / unfollow a user
     - step 2: sort 选出核心功能
@@ -21,8 +22,8 @@
       - follow / unfollow a user
       - register / login
   - 需要承受多大的访问量？
-    - 并发用户concurrent 
-      - 日活跃*每个用户平均请求次数/一天多少秒user eg. 150M * 60 / 86400 ~ 100k
+    - 并发用户concurrent
+      - 日活跃*每个用户平均请求次数/一天多少秒user eg. 150M* 60 / 86400 ~ 100k
       - 峰值 peak = average concurrent user * 3 ～ 300 k
       - 快速增长的产品 fast growing
         - max peak users in 3 months = peak users * 2
@@ -121,44 +122,71 @@
       - 无解？完全切换回pull？
       - trade off：pull + push vs pull
 
+# 2. Design User System
 
+- Scenario 场景
+  - 注册，登陆，查询，用户信息修改
+    - 查询需求量最大
+  - 支持100m DAU
+  - 注册，登陆，信息修改qps约
+    - 100M * 0.1 / 86400 = 100
+    - 0.1 = 平均每个用户每天登陆+注册+信息修改
+    - peak = 100 * 3 = 300
+  - 查询的qps约
+    - 100M * 100 / 86400 ~ 100k
+    - 100 = 平均每个用户每天与查询用户
+    - peak = 100k * 3 = 300k
+- Service 服务
+  - 一个authservice 负责登陆注册
+  - 一个userservice 负责用户信息存储与查询
+  - 一个friendship service负责好友关系存储
+- Storage 存储
+  - 数据库选择
+    - MySQL/Postgres 等sql数据库的性能
+      - 约1k qps
+    - mongodb/cassandra等硬盘型nosql数据库的性能
+      - 约10k qps
+    - redis/memcached等内存型nosql数据库的性能（注意数据库的持久化）
+      - 100k ～ 1m qps
+    - 以上数据根据机器性能和硬盘数量及硬盘读写速度会有区别
+    - 注册登陆信息修改300 qps： mysql就能解决
+    - 用户信息查询最好用redis类的数据存储系统
+    - 用户系统特点：读非常多，写非常少，读多写少的系统，一定要用cache进行优化
+      - 爬虫：写多读少
+      - 用户用的东西都是读多写少，机器人的东西都是写多读少
+  - cache
+    - cache是什么？
+      - 缓存，把之后可能要查询的东西先存一下
+        - 下次要的时候，直接从这里拿，无需重新计算和存取数据库等
+      - 可以理解为一个java中的hashmap
+      - key-value结构
+    - 有哪些常用的cache系统/软件？
+      - memcached（不支持数据持久化）
+      - redis（支持数据持久化）
+    - cache一定是存在内存中么
+      - file system也可以做cache
+      - cpu也有cache
+    - cache一定指server cache么？
+      - 不是，frontend/client/browser也可能有客户端的cache
+    - cache.delete(key); database/set(user) 
+- Scale 扩展
 
-# 2. Database System
-
-
-
+# 3. Database System
 
 asdf
 
-
 # 3. 一致性哈希算法
-
-
-
-
-
 
 # 4. 设计短网址系统
 
-
-
-
 # 5. 以gfs分布式文件系统
-
 
 # 6. 爬虫系统与搜索建议系统
 
-
-
 # 7. 分布式计算系统 - map reduce的原理与应用
-
-
 
 # 8. 基于地理位置信息的系统设计
 
-
 # 9. 以big table为例探索分布式数据库
-
-
 
 # 10. 聊天系统与访问限制系统
