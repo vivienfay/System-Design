@@ -124,6 +124,8 @@
 
 # 2. Design User System
 
+# 2. Design User System
+
 - Scenario 场景
   - 注册，登陆，查询，用户信息修改
     - 查询需求量最大
@@ -168,8 +170,72 @@
       - cpu也有cache
     - cache一定指server cache么？
       - 不是，frontend/client/browser也可能有客户端的cache
-    - cache.delete(key); database/set(user) 
+    - cache.delete(key); database/set(user) 几乎不会留下脏数据
+    - 读很多就用memcache去做优化
+
+  - Authentication System
+    - Session 一般3个月过期
+    - 用户login以后
+      - 创建一个session 对象
+      - 并把session_key作为cookie值传给浏览器
+      - 浏览器将该值记录在浏览器的cookie中
+      - 用户每次向服务器发送的访问，都会自动带上该网站所有的cookie
+      - 此时服务器检测到cookie中的session_key是有效的，就认为用户登陆了
+    - 用户logout之后
+      - 从session table里删除对应数据
+    - session table存在哪儿
+      通常都存在数据库，同时用cache去做优化
+  - 读写操作都很多：
+    - 方法一：使用更多数据库分摊流量
+    - 方法二：用redis这样读写操作都很快的cache-through型的database
+  - 架构
+    - 架构一：cache aside。db和cache之前互不沟通，服务器web server分别与他们沟通，业界典型：memcached+mysql
+    - 架构二：服务器只与cache沟通，cache与数据库沟通，业界典型代表redis
+  
+  - Friendship System
+    - 单向好友关系：用户主体(pk)，被关注的人(foriegn key)
+    - 双向好友关系：
+      - 方案一：存成两条信息
+      - 方案二：好友关系存一份 smaller userid， larger userid
+    - 好友关系涉及的操作基本都是key-value
+    - 大部分公司用的是key value，例如cassadra
+    - sql vs nosql 选择标准
+      - 大部分都可存
+      - 需要支持transaction（必须同时成功同时失败）的话就不能用nosql
+      - sql更加成熟，serialization，secondary index等
+      - 想要获得更高的性能可以用nosql
+    - 以cassandra为例的nosql数据结构
+      - 以列为存储，以grid为单位
+      - 第一层：row_key（影响它存在哪台机器）
+        - 又称hash_key,也是传统所说的key value中的那个key
+        - 任何的查询都要带上这个key，无法进行range query
+        - 最常用的row_key: user_id
+      - 第二层：column_key
+        - 是可以进行排序的，可以进行range_query
+        - 可以是复合值，比如一个timestamp+user_id的组合
+      - 第三层：value
+        - 一般来说是string
+        - 如果有很多信息，你自己可以做serialization
+       ![newsfeed-cassandra](img/newsfeed-cassandra.png)
+       ![friend-cassandra](cassandra-friendship.png)
 - Scale 扩展
+  - 考虑上升的qps
+  - 单点失效single point failure
+    - sharding 数据拆分
+      - 按照一定规则，将数据拆分成不同的部分，存在不同的机器上
+      - 就算挂了也不会导致网站100%不可用呢
+      - sharding in sql vs nonsql
+        - sql自身不带sharding功能，需要码农亲自上手
+        - cassandra为例的nosql都自带sharding
+      - vertical sharding（比较少）：user table，message table 放不同的数据库
+        - 复杂一点：user这种不怎么变的表放在一个数据库，剩下的放一个数据库
+        - 也容易发生单点失效
+      - horizontal sharding：
+        - 如果直接取%10（不一致hash）有什么不好：如果多加一台机器就需要迁移，还很慢
+        - 使用一致性hash算法：
+          - 不%n机器数目，将key mod一个很大的数，将这个数分配给n个机器，新加一个机器的时候，在表中选择一个位置插入，匀走相邻两个机器的量
+    - replica数据备份
+      - 通常的做法
 
 # 3. Database System
 
