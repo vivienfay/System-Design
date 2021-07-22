@@ -124,8 +124,6 @@
 
 # 2. Design User System
 
-# 2. Design User System
-
 - Scenario 场景
   - 注册，登陆，查询，用户信息修改
     - 查询需求量最大
@@ -224,7 +222,7 @@
     - sharding 数据拆分
       - 按照一定规则，将数据拆分成不同的部分，存在不同的机器上
       - 就算挂了也不会导致网站100%不可用呢
-      - sharding in sql vs nonsql
+      - sharding(partition) in sql vs nonsql
         - sql自身不带sharding功能，需要码农亲自上手
         - cassandra为例的nosql都自带sharding
       - vertical sharding（比较少）：user table，message table 放不同的数据库
@@ -234,14 +232,22 @@
         - 如果直接取%10（不一致hash）有什么不好：如果多加一台机器就需要迁移，还很慢
         - 使用一致性hash算法：
           - 不%n机器数目，将key mod一个很大的数，将这个数分配给n个机器，新加一个机器的时候，在表中选择一个位置插入，匀走相邻两个机器的量
+          - latency
+          - 数据不一致性
     - replica数据备份
       - 通常的做法
 
-# 3. Database System
-
-asdf
-
 # 3. 一致性哈希算法
+  - 数据分布不均匀
+  - 迁移压力大：新机器的数据只从两台老机器上获取 导致这两台老机器过大
+  - 更实用的方法：
+    - 将整个hash区间看成环
+    - 将环0～359扩展成0～2**64-1
+    - 将机器和数据都看作环上的点
+    - 引入micro
+
+
+
 
 # 4. 设计短网址系统
 
