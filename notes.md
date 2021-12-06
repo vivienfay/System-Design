@@ -237,7 +237,7 @@
     - replica数据备份
       - 通常的做法
 
-# 3. 一致性哈希算法
+# 3. 一致性哈希算法0:27
   - 数据分布不均匀
   - 迁移压力大：新机器的数据只从两台老机器上获取 导致这两台老机器过大
   - 更实用的方法：
@@ -246,10 +246,31 @@
     - 将机器和数据都看作环上的点
     - 引入micro
 
-
-
-
 # 4. 设计短网址系统
+
+- HTTP Server 将请求转发给web application
+  - 最火的三大web application framework：django, flask, ruby on rails, nodeJS
+  - Web Application请求
+- 网站的基本概念
+  - dns
+  - http
+  - domain
+  - ip address
+  - url
+  - web server
+  - http server
+  - web application
+- API Design
+- Restful API
+  - 每个api/problems 表示得到所有problems的数据
+  - 如api/problems/1得到problem=1的这个problem的数据
+  - 使用http的四个动作，post/delete/get/put
+- Design News Feed API
+  - 设计请求格式
+    - get https://facebook.com/api/feeds
+    - 返回structured api json/xml
+    - 如何设计翻页：/api/newsfeed/?max_id=xxx
+
 
 # 5. 以gfs分布式文件系统
 
